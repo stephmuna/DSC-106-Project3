@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>How Will My Climate Change?</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+</head>
+<body>
+  <header>
+    <h1>How Will My Climate Change?</h1>
+    <p>Explore projected temperature and precipitation change over the US.</p>
+  </header>
+
+  <section id="controls">
+    <label>
+      Variable:
+      <select id="variableSelect">
+        <option value="tas">Temperature change °C</option>
+        <option value="pr">Precipitation change (mm / year)</option>
+      </select>
+    </label>
+
+
+    <label>
+      Year:
+      <input type="range" id="yearSlider">
+      <span id="yearLabel"></span>
+    </label>
+  </section>
+
+  <section id="views">
+    <svg id="mapSvg" width="700" height="450"></svg>
+    <svg id="lineSvg" width="500" height="450"></svg>
+  </section>
+
+  <section id="brushSummary">
+  <h3>Selected region</h3>
+  <div id="brushStats">No region selected. Currently showing US average.</div>
+  <div id="brushStates"></div>
+</section>
+
+  <section id="writeup">
+    
+  </section>
+
+  <script src="main.js"></script>
+</body>
+</html>
