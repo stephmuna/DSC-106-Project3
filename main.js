@@ -57,7 +57,7 @@ const tooltip = d3.select("body").append("div")
   .style("display", "none");
 
 Promise.all([
-  d3.csv("data/cmip_us_grid_tas_pr_anom.csv", d3.autoType),
+  d3.csv("data/cmip_us_grid_tas_pr_anom2.csv", d3.autoType),
   d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json")
 ]).then(([grid, us]) => {
   grid.forEach(d => {
