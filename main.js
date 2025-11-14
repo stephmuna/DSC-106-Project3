@@ -442,7 +442,11 @@ function drawTimeSeries(selectedCells) {
   xLine.domain(allYears).range([0, innerWidth]);
   yLine.domain([allVals[0] - pad, allVals[1] + pad]).range([innerHeight, 0]);
 
-  xAxisG.call(d3.axisBottom(xLine).ticks(6));
+  xAxisG.call(
+    d3.axisBottom(xLine)
+      .ticks(6)
+      .tickFormat(d3.format("d"))   // <-- removes commas
+  );
   yAxisG.call(d3.axisLeft(yLine));
 
   const lineGen = d3.line()
@@ -504,7 +508,7 @@ function drawTimeSeries(selectedCells) {
     .text("Selected region");
 
   const titleText = currentVariable === "tas"
-    ? "Average temperature anomaly (°C, 1950–2100)"
+    ? "Average temperature anomaly (°C, 1980–2100)"
     : "Average precipitation anomaly (mm / year, 1950–2100)";
 
   const title = lineSvg.selectAll("text.title").data([titleText]);
