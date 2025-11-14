@@ -73,9 +73,88 @@
     <div id="metricStates" class="metricValue"></div>
   </section>
 
-  <section id="writeup">
-    
-  </section>
+  <section id="writeup" style="max-width: 800px; line-height: 1.6; margin: 2rem auto;">
+  
+    <h2><strong>Motivation</strong></h2>
+    <p>
+      Our goal was to help users understand how climate change may affect the places where they live.
+      Many online climate visualizations focus on national averages, but in reality, different
+      regions can be affected very differently by climate change because of factors like elevation
+      and terrain. We decided to measure climate change using two variables: temperature and
+      precipitation, but given more time, we’d ideally add more variables—such as air pollution,
+      wind speed, or greenhouse gas emissions—to provide a more complete picture. Using the CMIP6
+      dataset allowed us to include both historical and projected data.
+    </p>
+
+    <h2><strong>Design Decisions and Rationale</strong></h2>
+    <p>
+      We chose a choropleth map because climate change varies significantly by region, and maps are
+      the clearest way to show spatial differences. We used a diverging color scale (RdBu) because
+      both variables—temperature and precipitation anomalies—can be above or below zero, especially
+      since our data spans both the past and the future. We also scaled the domain dynamically per
+      year to prevent extreme values from washing out the color contrast.
+    </p>
+
+    <p>
+      We initially considered a text field for year selection, but a slider worked better visually
+      because climate patterns change smoothly over time. At first, our diverging scale was centered
+      at the mean value from 1980–2010, but this didn’t match our intended meaning. We wanted the
+      baseline to be the present (2025), and for users to explore how temperature and precipitation
+      have changed over time, both historically and in projections. To achieve this, we used grids:
+      each latitude–longitude grid cell includes temperature and precipitation data for 1980–2050
+      (70 values). For each grid, each year was compared to its 2025 value to compute anomalies
+      relative to 2025.
+    </p>
+
+    <p>
+      To keep the interface simple, we used a single dropdown that switches the variable for both
+      the map and line chart. This keeps the focus on exploring one variable at a time and maintains
+      a clean layout. We added hover tooltips for states so users don’t need to click to get basic
+      information.
+    </p>
+
+    <p>
+      One of our most important design decisions was implementing brushing, which allows users to
+      draw a box over any region to view the average anomaly for that specific area. We chose brushing
+      over click-based selection because it supports flexible shapes and multi-state regions (e.g.,
+      the Midwest). Since tooltips already display individual state information, brushing provided
+      broader regional insights. A major challenge, however, was that brushing was initially slow:
+      updating the line chart and summary after brushing took a long time. We tried pre-aggregating
+      data by state on load, but this caused browser freezing. We also considered reducing the
+      timespan (e.g., starting at 2000 instead of 1980) to reduce the amount of data processed, but
+      we wanted to retain the longer-term trends. Ultimately, we added a note in the subtitle
+      informing users that brushing may take a moment to load. With more time, we would explore
+      better optimization strategies.
+    </p>
+
+    <p>
+      A map only shows one year at a time, so we added a time series view to show long-term trends.
+      The line chart displays US average anomalies (always shown as a dashed gray line) and the
+      selected region’s trend (solid red line). 
+    </p>
+
+    <p>
+      One limitation we were unable to resolve was missing data for states that are either too small
+      (e.g., Massachusetts, Rhode Island) or geographically distant from the continental US (Hawaii
+      and Alaska). We would consider incorporating an alternative dataset in the future. For now,
+      those states remain white.
+    </p>
+
+    <h2><strong>Data Transformations</strong></h2>
+    <ul>
+      <li>Converted longitudes to the −180 to 180 range.</li>
+      <li>Used <code>d3.geoContains</code> to determine which grid cells fall inside each state.</li>
+      <li>Averaged anomalies per state.</li>
+      <li>Rolled up values by year and scenario (historical vs. SSP585) for the line chart.</li>
+      <li>Computed summaries (mean, min, max) for brushed regions.</li>
+    </ul>
+
+    <p>
+      We initially tested spatial joins using GeoJSON libraries, but these performed more slowly in
+      the browser. D3’s geometry utilities were faster, so we ultimately adopted them.
+    </p>
+
+</section>
 
   <script src="main.js"></script>
 </body>
