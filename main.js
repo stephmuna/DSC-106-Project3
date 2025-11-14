@@ -56,6 +56,93 @@ const tooltip = d3.select("body").append("div")
   .style("border-radius", "4px")
   .style("display", "none");
 
+// ---------- COLOR LEGEND FOR MAP ----------
+function drawColorLegend(colorScale, minVal, maxVal) {
+  const legendWidth = 260;
+  const legendHeight = 10;
+
+  // Create or select legend group
+  let legendG = mapSvg.select("g.color-legend");
+  if (legendG.empty()) {
+    legendG = mapSvg.append("g")
+      .attr("class", "color-legend")
+      .attr(
+        "transform",
+        `translate(${(mapWidth - legendWidth) / 2}, ${mapHeight - 35})`
+      );
+  }
+
+  // Clear previous contents
+  legendG.selectAll("*").remove();
+
+  // Create or reuse defs
+  let defs = mapSvg.select("defs#legend-defs");
+  if (defs.empty()) {
+    defs = mapSvg.append("defs").attr("id", "legend-defs");
+  }
+
+  const gradientId = "legend-gradient";
+
+  // Remove old gradient if it exists
+  defs.select(`#${gradientId}`).remove();
+
+  const gradient = defs.append("linearGradient")
+    .attr("id", gradientId)
+    .attr("x1", "0%")
+    .attr("x2", "100%")
+    .attr("y1", "0%")
+    .attr("y2", "0%");
+
+  const stops = d3.range(0, 1.01, 0.1).map(t => ({
+    offset: `${t * 100}%`,
+    color: colorScale(minVal + t * (maxVal - minVal))
+  }));
+
+  gradient.selectAll("stop")
+    .data(stops)
+    .enter()
+    .append("stop")
+    .attr("offset", d => d.offset)
+    .attr("stop-color", d => d.color);
+
+  // Color bar rectangle
+  legendG.append("rect")
+    .attr("width", legendWidth)
+    .attr("height", legendHeight)
+    .style("fill", `url(#${gradientId})`)
+    .style("stroke", "#333")
+    .style("stroke-width", 0.5);
+
+  // Axis for numeric values
+  const legendScale = d3.scaleLinear()
+    .domain([minVal, maxVal])
+    .range([0, legendWidth]);
+
+  const legendAxis = d3.axisBottom(legendScale)
+    .ticks(5)
+    .tickFormat(d => d.toFixed(1));
+
+  legendG.append("g")
+    .attr("transform", `translate(0, ${legendHeight})`)
+    .call(legendAxis)
+    .selectAll("text")
+    .style("font-size", "10px");
+
+  // Label text
+  const labelText = currentVariable === "tas"
+    ? "Temperature anomaly (°C)"
+    : "Precipitation anomaly (mm / year)";
+
+  legendG.append("text")
+    .attr("x", legendWidth / 2)
+    .attr("y", -6)
+    .attr("font-size", 11)
+    .attr("font-weight", "600")
+    .attr("text-anchor", "middle")
+    .text(labelText);
+}
+
+// ---------- DATA LOAD ----------
 Promise.all([
   d3.csv("data/cmip_us_grid_tas_pr_anom2.csv", d3.autoType),
   d3.json("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json")
@@ -160,6 +247,9 @@ function drawMap() {
     .domain([maxAbs, 0, -maxAbs])
     .interpolator(d3.interpolateRdBu);
 
+  // draw/update legend (styling only)
+  drawColorLegend(color, -maxAbs, maxAbs);
+
   const valsByState = new Map();
   stateFeatures.forEach(f => valsByState.set(f.id, []));
 
@@ -242,11 +332,29 @@ function brushed(event) {
 }
 
 function updateBrushSummary(selectedCells) {
+  // Grab metric elements
+  const yearEl = document.getElementById("metricYear");
+  const scenEl = document.getElementById("metricScenario");
+  const meanEl = document.getElementById("metricMean");
+  const minEl  = document.getElementById("metricMin");
+  const maxEl  = document.getElementById("metricMax");
+  const statesEl = document.getElementById("metricStates");
+
+  // Helper to reset when nothing is selected
+  function resetMetrics(message) {
+    yearEl.textContent  = "—";
+    scenEl.textContent  = "—";
+    meanEl.textContent  = "—";
+    minEl.textContent   = "—";
+    maxEl.textContent   = "—";
+    statesEl.textContent = message || "No region selected. Showing US average.";
+  }
+
   const varLabel = currentVariable === "tas" ? "temperature" : "precipitation";
 
+  // No selection at all
   if (!selectedCells || !selectedCells.length) {
-    brushStatsDiv.text("No region selected. Showing US average.");
-    brushStatesDiv.text("");
+    resetMetrics();
     return;
   }
 
@@ -257,24 +365,31 @@ function updateBrushSummary(selectedCells) {
     d.scenario === scen
   );
 
+  // Selection exists, but no data for this year/scenario
   if (!currentCells.length) {
-    brushStatsDiv.text(`No data in selection for ${scen}, ${currentYear}.`);
-    brushStatesDiv.text("");
+    yearEl.textContent = currentYear;
+    scenEl.textContent = scen;
+    meanEl.textContent = "—";
+    minEl.textContent  = "—";
+    maxEl.textContent  = "—";
+    statesEl.textContent = `No data in selection for ${scen}, ${currentYear}.`;
     return;
   }
 
+  // Compute stats
   const mean = d3.mean(currentCells, d => d.anom);
-  const min = d3.min(currentCells, d => d.anom);
-  const max = d3.max(currentCells, d => d.anom);
+  const min  = d3.min(currentCells, d => d.anom);
+  const max  = d3.max(currentCells, d => d.anom);
   const unit = currentVariable === "tas" ? "°C" : "mm/yr";
 
-  brushStatsDiv.text(
-    `Year ${currentYear}, ${scen} — ` +
-    `${varLabel} anomaly in region: ` +
-    `mean ${mean.toFixed(2)} ${unit}, ` +
-    `min ${min.toFixed(2)}, max ${max.toFixed(2)}`
-  );
+  // Fill metric strip
+  yearEl.textContent = currentYear;
+  scenEl.textContent = scen;
+  meanEl.textContent = `${mean.toFixed(2)} ${unit}`;
+  minEl.textContent  = min.toFixed(2);
+  maxEl.textContent  = max.toFixed(2);
 
+  // States in region (same logic you had before)
   const statesSet = new Set();
   selectedCells.forEach(cell => {
     const pt = [cell.lon180, cell.lat];
@@ -286,11 +401,9 @@ function updateBrushSummary(selectedCells) {
   });
 
   const names = Array.from(statesSet).sort();
-  brushStatesDiv.text(
-    names.length
-      ? `States in region: ${names.join(", ")}`
-      : "States in region: (none)"
-  );
+  statesEl.textContent = names.length
+    ? names.join(", ")
+    : "(none)";
 }
 
 function drawTimeSeries(selectedCells) {
@@ -347,6 +460,48 @@ function drawTimeSeries(selectedCells) {
     .attr("stroke", "#d62728")
     .attr("stroke-dasharray", null)
     .attr("d", regionSeries.length ? lineGen : null);
+
+  // ---------- LEGEND FOR LINE CHART ----------
+  const legend = lineSvg.selectAll("g.line-legend").data([null]);
+
+  const legendEnter = legend.enter()
+    .append("g")
+    .attr("class", "line-legend")
+    .attr("transform", `translate(${margin.left}, ${lineHeight - 10})`);
+
+  const legendG = legendEnter.merge(legend);
+  legendG.selectAll("*").remove();
+
+  // US baseline (grey dashed)
+  legendG.append("line")
+    .attr("x1", 0)
+    .attr("x2", 30)
+    .attr("y1", 0)
+    .attr("y2", 0)
+    .attr("stroke", "#aaa")
+    .attr("stroke-width", 2)
+    .attr("stroke-dasharray", "4,2");
+
+  legendG.append("text")
+    .attr("x", 40)
+    .attr("y", 4)
+    .attr("font-size", 12)
+    .text("US baseline");
+
+  // Selected region (red line)
+  legendG.append("line")
+    .attr("x1", 140)
+    .attr("x2", 170)
+    .attr("y1", 0)
+    .attr("y2", 0)
+    .attr("stroke", "#d62728")
+    .attr("stroke-width", 2);
+
+  legendG.append("text")
+    .attr("x", 180)
+    .attr("y", 4)
+    .attr("font-size", 12)
+    .text("Selected region");
 
   const titleText = currentVariable === "tas"
     ? "Average temperature anomaly (°C, 1950–2100)"

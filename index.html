@@ -30,16 +30,47 @@
     </label>
   </section>
 
+  <p id="note"> Note: Drag across map to see region aggregates </p>
+  <p id="exp">**Visualiation may take a few seconds to update when brushing over a region</p>
+
   <section id="views">
     <svg id="mapSvg" width="700" height="450"></svg>
     <svg id="lineSvg" width="500" height="450"></svg>
   </section>
 
   <section id="brushSummary">
-  <h3>Selected region</h3>
-  <div id="brushStats">No region selected. Currently showing US average.</div>
-  <div id="brushStates"></div>
-</section>
+    <h3>Selected region</h3>
+  
+    <div id="summaryRow">
+      <div class="summaryMetric">
+        <div class="metricLabel">YEAR</div>
+        <div id="metricYear" class="metricValue">—</div>
+      </div>
+  
+      <div class="summaryMetric">
+        <div class="metricLabel">SCENARIO</div>
+        <div id="metricScenario" class="metricValue">—</div>
+      </div>
+  
+      <div class="summaryMetric">
+        <div class="metricLabel">MEAN TEMPERATURE</div>
+        <div id="metricMean" class="metricValue">—</div>
+      </div>
+  
+      <div class="summaryMetric">
+        <div class="metricLabel">MIN</div>
+        <div id="metricMin" class="metricValue">—</div>
+      </div>
+  
+      <div class="summaryMetric">
+        <div class="metricLabel">MAX</div>
+        <div id="metricMax" class="metricValue">—</div>
+      </div>
+    </div>
+  
+    <div class="metricLabel" style="margin-top: 28px;">STATES IN REGION</div>
+    <div id="metricStates" class="metricValue"></div>
+  </section>
 
   <section id="writeup">
     

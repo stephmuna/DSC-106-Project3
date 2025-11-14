@@ -31,3 +31,66 @@ svg {
 #yearSlider {
   width: 500px;
 }
+
+#brushSummary {
+  max-width: 1000px;
+  margin: 20px 0 40px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+#brushSummary h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+
+#summaryRow {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 40px;
+  text-align: left;
+}
+
+.summaryMetric {
+  flex: 1 1 0px;
+}
+
+.metricLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  color: #6b7280; 
+  margin-bottom: 6px;
+}
+
+.metricValue {
+  font-size: 1.7rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+
+#metricStates {
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin-top: 6px;
+  color: #111827;
+}
+
+#note {
+  margin: 0 0 12px 0;
+  font-size: 1rem;
+  color: #6b7280;         
+  font-style: italic;
+  text-align: center;
+}
+#exp {
+  margin: 0 0 24px 0;
+  font-size: 0.81rem;
+  color: #6b7280;         
+  font-style: italic;
+  text-align: center;
+}
